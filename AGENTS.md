@@ -22,12 +22,12 @@ Each package has its own `package.json` with `"pi": { "extensions": [...] }` dec
 Extensions are TypeScript loaded by pi via [jiti](https://github.com/unjs/jiti) — no build step. The entry point exports a default function receiving `ExtensionAPI`.
 
 Available imports:
-- `@mariozechner/pi-coding-agent` — extension types, components, utilities
-- `@mariozechner/pi-tui` — TUI components (Text, Container, SelectList, etc.)
-- `@mariozechner/pi-ai` — AI types (Message, Model, StringEnum)
+- `@earendil-works/pi-coding-agent` — extension types, components, utilities
+- `@earendil-works/pi-tui` — TUI components (Text, Container, SelectList, etc.)
+- `@earendil-works/pi-ai` — AI types (Message, Model, StringEnum)
 - `@sinclair/typebox` — schema definitions for tool parameters
 
-Pi extension docs: https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/extensions.md
+Pi extension docs: https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/extensions.md
 
 ## Adding a Package
 

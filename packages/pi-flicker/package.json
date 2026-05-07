@@ -1,6 +1,6 @@
 {
   "name": "@ogulcancelik/pi-flicker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A pi extension that brings Claude Code flicker to pi",
   "type": "module",
   "keywords": [

@@ -5,10 +5,10 @@
  * plus /spar and /spview commands for viewing spar sessions.
  */
 
-import type { ExtensionAPI, Theme } from "@mariozechner/pi-coding-agent";
-import { StringEnum } from "@mariozechner/pi-ai";
+import type { ExtensionAPI, Theme } from "@earendil-works/pi-coding-agent";
+import { StringEnum } from "@earendil-works/pi-ai";
 import { Type } from "@sinclair/typebox";
-import { Text, Container, Spacer, SelectList, Input, matchesKey, truncateToWidth, type SelectItem, type SelectListTheme } from "@mariozechner/pi-tui";
+import { Text, Container, Spacer, SelectList, Input, matchesKey, truncateToWidth, type SelectItem, type SelectListTheme } from "@earendil-works/pi-tui";
 import {
 	sendMessage,
 	listSessions,

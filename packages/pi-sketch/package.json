@@ -1,6 +1,6 @@
 {
   "name": "@ogulcancelik/pi-sketch",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Quick sketch pad for pi - draw in browser, send to models",
   "keywords": [
     "pi-package",
@@ -28,7 +28,7 @@
     "LICENSE"
   ],
   "devDependencies": {
-    "@mariozechner/pi-coding-agent": "^0.63.0"
+    "@earendil-works/pi-coding-agent": "^0.74.0"
   },
   "pi": {
     "extensions": [

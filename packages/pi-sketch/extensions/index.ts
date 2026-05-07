@@ -3,7 +3,7 @@
  * /sketch → opens browser canvas → draw → Enter sends to models
  */
 
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { createServer, type Server } from "node:http";
 import { exec } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";

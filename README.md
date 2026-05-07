@@ -1,6 +1,6 @@
 # pi extensions
 
-Extensions for [pi](https://github.com/badlogic/pi-mono), the terminal-based coding agent.
+Extensions for [pi](https://github.com/earendil-works/pi), the terminal-based coding agent.
 
 | Package | Description |
 |---------|-------------|

@@ -7,9 +7,9 @@
  * Supports: Claude Max, Codex, Copilot, Gemini
  */
 
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { buildSessionContext } from "@mariozechner/pi-coding-agent";
-import { visibleWidth, truncateToWidth } from "@mariozechner/pi-tui";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { buildSessionContext } from "@earendil-works/pi-coding-agent";
+import { visibleWidth, truncateToWidth } from "@earendil-works/pi-tui";
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";

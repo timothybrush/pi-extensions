@@ -1,6 +1,6 @@
 # pi-ghost
 
-Ephemeral side conversation overlay for [pi](https://github.com/badlogic/pi-mono).
+Ephemeral side conversation overlay for [pi](https://github.com/earendil-works/pi).
 
 Open a temporary "ghost" session inside the current pi UI, ask something quick, hide it, bring it back, then close it without saving any session history.
 
@@ -109,7 +109,7 @@ Useful when you want to:
 
 ## Requirements
 
-- [pi](https://github.com/badlogic/pi-mono) with extension support
+- [pi](https://github.com/earendil-works/pi) with extension support
 - interactive mode (the overlay is TUI-only)
 
 ## Development

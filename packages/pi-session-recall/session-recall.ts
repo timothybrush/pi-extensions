@@ -23,8 +23,8 @@
  *   session_query(path, "what approach did we take for X?")
  */
 
-import { complete, type Model, type Api, type Message } from "@mariozechner/pi-ai";
-import type { ExtensionAPI, ExtensionCommandContext } from "@mariozechner/pi-coding-agent";
+import { complete, type Model, type Api, type Message } from "@earendil-works/pi-ai";
+import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import {
 	getAgentDir,
 	SessionManager,
@@ -32,7 +32,7 @@ import {
 	getMarkdownTheme,
 	serializeConversation,
 	type SessionEntry,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import {
 	Container,
 	Input,
@@ -42,7 +42,7 @@ import {
 	type SelectListTheme,
 	Spacer,
 	Text,
-} from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";

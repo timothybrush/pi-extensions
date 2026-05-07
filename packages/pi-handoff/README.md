@@ -22,7 +22,7 @@ That is not robust enough to keep using.
 
 I now use the upstream handoff example directly:
 
-- https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/examples/extensions/handoff.ts
+- https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/handoff.ts
 
 That approach is simpler and more reliable:
 

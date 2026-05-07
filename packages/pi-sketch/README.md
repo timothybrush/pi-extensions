@@ -1,6 +1,6 @@
 # pi-sketch
 
-Quick sketch pad for [pi](https://github.com/badlogic/pi-mono) - draw in browser, send to models.
+Quick sketch pad for [pi](https://github.com/earendil-works/pi) - draw in browser, send to models.
 
 ![demo](https://raw.githubusercontent.com/ogulcancelik/pi-sketch/main/assets/demo.gif)
 

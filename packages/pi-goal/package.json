@@ -1,15 +1,16 @@
 {
   "name": "@ogulcancelik/pi-goal",
-  "version": "0.1.1",
-  "description": "Autonomous goal pursuit for pi. Break work into tasks, spawn worker agents, track progress via files on disk.",
+  "version": "0.1.2",
+  "description": "Codex-style long-running goal mode for pi with automatic linked-session handoff.",
   "type": "module",
   "keywords": [
     "pi-package",
     "pi-extension",
     "goal",
     "autonomous",
-    "sub-agent",
-    "task-management",
+    "long-running",
+    "handoff",
+    "context-budget",
     "coding-agent"
   ],
   "author": "Can Celik",

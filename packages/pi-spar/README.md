@@ -1,6 +1,6 @@
 # pi-spar
 
-Agent-to-agent sparring for [pi](https://github.com/badlogic/pi-mono). Back-and-forth conversations with peer AI models for debugging, design review, and challenging your thinking.
+Agent-to-agent sparring for [pi](https://github.com/earendil-works/pi). Back-and-forth conversations with peer AI models for debugging, design review, and challenging your thinking.
 
 ## Install
 

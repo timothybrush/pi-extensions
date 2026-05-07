@@ -1,6 +1,6 @@
 # pi-ssh-tools
 
-Explicit SSH tools for [pi](https://github.com/badlogic/pi-mono).
+Explicit SSH tools for [pi](https://github.com/earendil-works/pi).
 
 Turn SSH mode on only when you need it, keep local tools untouched, and give the agent a separate remote toolset:
 
@@ -69,7 +69,7 @@ This is mainly a convenience layer. SSH config is not required for the actual re
 
 ## Requirements
 
-- [pi](https://github.com/badlogic/pi-mono)
+- [pi](https://github.com/earendil-works/pi)
 - local `ssh` client available in `$PATH`
 - key-based auth or another non-interactive SSH setup
 - `bash` available on the remote host

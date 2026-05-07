@@ -6,28 +6,28 @@
  * same everything.
  */
 
-import type { Theme } from "@mariozechner/pi-coding-agent";
+import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
 	SessionManager,
 	getMarkdownTheme,
 	AssistantMessageComponent,
 	ToolExecutionComponent,
 	UserMessageComponent,
-} from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-coding-agent";
 import {
 	SESSION_DIR,
 	getModelAlias,
 	getSocketPath,
 	isPeekActive,
 } from "./core.js";
-import type { AssistantMessage } from "@mariozechner/pi-ai";
+import type { AssistantMessage } from "@earendil-works/pi-ai";
 import {
 	Container,
 	matchesKey,
 	truncateToWidth,
 	visibleWidth,
 	type TUI,
-} from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-tui";
 import * as fs from "fs";
 import * as net from "net";
 import * as path from "path";

@@ -1,6 +1,6 @@
 # pi-ghostty-theme-sync
 
-Sync [pi](https://github.com/badlogic/pi-mono) theme with your active [Ghostty](https://ghostty.org/) terminal colors.
+Sync [pi](https://github.com/earendil-works/pi) theme with your active [Ghostty](https://ghostty.org/) terminal colors.
 
 ![demo](assets/demo.gif)
 

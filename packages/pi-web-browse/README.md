@@ -1,6 +1,6 @@
 # pi-web-browse
 
-Web search and content extraction skill for [pi](https://github.com/badlogic/pi-mono). Search the web and fetch pages via a real headless browser (CDP).
+Web search and content extraction skill for [pi](https://github.com/earendil-works/pi). Search the web and fetch pages via a real headless browser (CDP).
 
 **Works on Linux, macOS, and Windows.**
 

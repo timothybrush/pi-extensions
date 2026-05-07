@@ -1,6 +1,6 @@
 # pi-minimal-footer
 
-Minimal footer for [pi](https://github.com/badlogic/pi-mono) that replaces the default footer with a compact two-line display: context gauge on top, subscription usage bars below.
+Minimal footer for [pi](https://github.com/earendil-works/pi) that replaces the default footer with a compact two-line display: context gauge on top, subscription usage bars below.
 
 ![Claude Max](assets/claude.png)
 

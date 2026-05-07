@@ -19,7 +19,7 @@ import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { type ExtensionAPI, getAgentDir } from "@mariozechner/pi-coding-agent";
+import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent";
 
 interface GhosttyColors {
 	background: string;
@@ -156,7 +156,7 @@ function generatePiTheme(colors: GhosttyColors, themeName: string): object {
 	const customMsgBg = mixColors(bg, accent, 0.92);
 
 	return {
-		$schema: "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+		$schema: "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
 		name: themeName,
 		vars: {
 			bg: _bg,

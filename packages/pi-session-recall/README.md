@@ -1,6 +1,6 @@
 # pi-session-recall
 
-Recall past [pi](https://github.com/badlogic/pi-mono) sessions. Search through conversation history and query specific sessions with an LLM.
+Recall past [pi](https://github.com/earendil-works/pi) sessions. Search through conversation history and query specific sessions with an LLM.
 
 ## Install
 
@@ -55,7 +55,7 @@ If no model is configured (or the configured model isn't available), it falls ba
 
 ## Requirements
 
-- [pi](https://github.com/badlogic/pi-mono) v0.40+
+- [pi](https://github.com/earendil-works/pi) v0.40+
 - [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) — recommended for fast search, falls back to `grep` or Node-native scan
 
 ## License

@@ -1,7 +1,7 @@
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
-import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, truncateTail } from "@mariozechner/pi-coding-agent";
-import { StringEnum } from "@mariozechner/pi-ai";
-import { Text } from "@mariozechner/pi-tui";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { DEFAULT_MAX_BYTES, DEFAULT_MAX_LINES, truncateTail } from "@earendil-works/pi-coding-agent";
+import { StringEnum } from "@earendil-works/pi-ai";
+import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 
 type AgentStatus = "idle" | "working" | "blocked" | "done" | "unknown";
@@ -321,7 +321,7 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		const pane = await getPaneInfo(ref, signal);
-		if (!pane) return null;
+		if (!pane || pane.workspace_id !== workspaceId) return null;
 		const alias = [...managedPanes.entries()].find(([, managedPane]) => managedPane.paneId === pane.pane_id)?.[0];
 		return { pane, alias };
 	}
@@ -457,20 +457,20 @@ export default function (pi: ExtensionAPI) {
 			"When you want to submit a line or prompt to a pane, prefer `run` over `send` + `Enter` so text and Enter happen atomically.",
 			"Use `send` only for low-level literal text or key injection when you do not want command-style submission semantics.",
 			"Preserve the current UI focus by default. Do not change workspace or tab focus unless the user explicitly asks or the workflow truly requires visible interaction there.",
-			"Pane actions like pane_split, run, read, watch, wait_agent, send, and stop must target pane aliases or pane ids, not tab ids.",
+			"Pane actions like run, read, watch, wait_agent, send, and stop must target pane aliases or pane ids, not tab ids. For pane_split, omit pane to split the agent's own pane, or pass a pane alias/id to split that explicit source pane.",
 			"Use `herdr` workspace, tab, and pane_split actions to organize parallel work instead of piling everything into one pane stack.",
 			"Use `herdr` watch for normal command output, including server readiness, test completion, or regex matches.",
 			"Use `herdr` wait_agent only for panes running a recognized coding agent. It waits on agent statuses, not normal process completion; use watch/read for commands like tests or servers.",
 			"For agent panes, background finished panes usually become `done` while focused finished panes usually become `idle`.",
 			"Use `recent-unwrapped` when you need log matching or reads that ignore soft wrapping.",
 			"Pane references can be either friendly aliases you created earlier or real herdr pane ids from `list`.",
-			"Use `pane_split`, `tab_create`, or `workspace_create` to establish new pane targets. `run` only works with an existing pane alias or pane id.",
+			"Use `pane_split`, `tab_create`, or `workspace_create` to establish new pane targets. `pane_split` defaults to the agent's own pane when pane is omitted. `run` only works with an existing pane alias or pane id.",
 			"Use friendly pane aliases like `server`, `reviewer`, or `tests` so later reads, watches, and sends can reuse them across the session.",
 			"When starting a fresh pi instance in another pane and the model matters, either specify `--model` explicitly or ask the user which model/provider they want.",
 		],
 		parameters: Type.Object({
 			action: ActionEnum,
-			pane: Type.Optional(Type.String({ description: "Friendly pane alias or explicit pane id" })),
+			pane: Type.Optional(Type.String({ description: "Friendly pane alias or explicit pane id. For pane_split, omit to split the agent's own pane." })),
 			panes: Type.Optional(Type.Array(Type.String(), { description: "Pane aliases or pane ids for multi-pane waits" })),
 			workspace: Type.Optional(Type.String({ description: "Workspace id for workspace or tab actions" })),
 			tab: Type.Optional(Type.String({ description: "Tab id for tab actions or focus(tab) only. Pane actions must use pane ids or aliases." })),
@@ -664,9 +664,8 @@ export default function (pi: ExtensionAPI) {
 
 				case "pane_split": {
 					rejectUnexpectedParams("pane_split", params, ["workspace", "tab"]);
-					const paneRef = params.pane;
+					const paneRef = params.pane ?? currentPaneId;
 					const direction = params.direction;
-					if (!paneRef) throw new Error("'pane' is required for pane_split");
 					if (!direction) throw new Error("'direction' is required for pane_split");
 
 					const sourcePane = await requirePaneRef(paneRef, currentWorkspaceId, signal);

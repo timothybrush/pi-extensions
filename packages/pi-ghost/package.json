@@ -1,6 +1,6 @@
 {
   "name": "@ogulcancelik/pi-ghost",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Like /btw, but as a native ghost overlay for pi",
   "type": "module",
   "keywords": [

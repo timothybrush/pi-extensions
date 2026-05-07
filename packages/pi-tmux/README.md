@@ -1,6 +1,6 @@
 # pi-tmux
 
-Tmux pane management for [pi](https://github.com/badlogic/pi-mono). Run dev servers, watchers, and long-running processes in named panes without blocking the agent.
+Tmux pane management for [pi](https://github.com/earendil-works/pi). Run dev servers, watchers, and long-running processes in named panes without blocking the agent.
 
 ## Install
 
@@ -46,7 +46,7 @@ Pi runs on the left. The first worker pane splits to the right. Additional panes
 
 ## Requirements
 
-- [pi](https://github.com/badlogic/pi-mono) v0.40+
+- [pi](https://github.com/earendil-works/pi) v0.40+
 - [tmux](https://github.com/tmux/tmux) — pi must be running inside a tmux session without `HERDR_ENV`
 
 ## License

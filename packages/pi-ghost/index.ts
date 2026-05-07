@@ -9,9 +9,9 @@ import {
 	type AgentSessionEvent,
 	type ExtensionAPI,
 	type ExtensionCommandContext,
-} from "@mariozechner/pi-coding-agent";
-import type { AssistantMessage } from "@mariozechner/pi-ai";
-import { Container, Input, Key, matchesKey, truncateToWidth, visibleWidth, type Focusable, type KeybindingsManager, type OverlayHandle, type TUI } from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-coding-agent";
+import type { AssistantMessage } from "@earendil-works/pi-ai";
+import { Container, Input, Key, matchesKey, truncateToWidth, visibleWidth, type Focusable, type KeybindingsManager, type OverlayHandle, type TUI } from "@earendil-works/pi-tui";
 
 class GhostOverlayComponent implements Focusable {
 	private readonly transcriptContainer = new Container();
