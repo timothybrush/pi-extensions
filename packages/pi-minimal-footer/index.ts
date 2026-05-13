@@ -1000,7 +1000,7 @@ export default function (pi: ExtensionAPI) {
           const { percentage, used: ctxUsed, total: ctxTotal } = getContextInfo(ctx);
 
           // Build parts for status line
-          let pwd = process.cwd();
+          let pwd = ctx.cwd;
           const home = process.env.HOME || process.env.USERPROFILE;
           if (home && pwd.startsWith(home)) {
             pwd = `~${pwd.slice(home.length)}`;
