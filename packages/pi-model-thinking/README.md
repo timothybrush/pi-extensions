@@ -57,7 +57,7 @@ Resolution order:
 2. `providers["provider"]` — provider-wide fallback
 3. Not in file → extension ignores, pi handles natively
 
-You don't need a config file at all. Start without one, and the file will be created the first time you `Shift+Tab` on a model.
+You must create the config file. Only models explicitly listed (exact or by provider) are **managed** by the extension. For unmanaged models, pi handles thinking natively and the extension does not interfere.
 
 ## Commands
 
@@ -67,9 +67,21 @@ You don't need a config file at all. Start without one, and the file will be cre
 
 ## Example flow
 
-1. Start pi with no config file. Use Claude. Thinking is handled by pi natively.
-2. `Shift+Tab` change thinking to `high`. Extension silently writes `"anthropic/claude-sonnet-4-5": "high"`.
-3. Quit pi, start a new session, `Ctrl+P` back to Claude. Thinking is automatically `high`.
-4. Switch to GPT (not in file). Extension does nothing — pi's native default applies.
-5. `Shift+Tab` on GPT to `medium`. Extension adds it to the file.
-6. Switch back to Claude → `high`. Switch to GPT → `medium`. No manual tweaking needed.
+Create `~/.pi/agent/model-thinking.json` with your defaults:
+
+```json
+{
+  "providers": {
+    "anthropic": "high",
+    "openai-codex": "medium"
+  }
+}
+```
+
+1. `Ctrl+P` to Claude → thinking is `high` (provider default).
+2. `Shift+Tab` change thinking to `low`. Extension writes `"anthropic/claude-sonnet-4-5": "low"`.
+3. Quit pi, start a new session, `Ctrl+P` back to Claude. Thinking is automatically `low`.
+4. `Shift+Tab` back to `high`. Extension removes the exact-model override (matches provider default).
+5. Switch to GPT (managed via `openai-codex` provider). Thinking is `medium`.
+6. `Shift+Tab` on GPT to `high`. Extension writes `"openai/gpt-5.2-codex": "high"`.
+7. Switch back to Claude → `high`. Switch to GPT → `high`. No manual tweaking needed.
