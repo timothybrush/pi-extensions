@@ -11,6 +11,7 @@ Extensions for [pi](https://github.com/earendil-works/pi), the terminal-based co
 | [pi-herdr](packages/pi-herdr) | Herdr-native pane, tab, and workspace orchestration for long-running workflows |
 | [pi-minimal-footer](packages/pi-minimal-footer) | Minimal footer with context gauge and subscription usage bars |
 | [pi-model-agents](packages/pi-model-agents) | Load model-specific AGENTS.md instructions based on the active pi model |
+| [pi-model-thinking](packages/pi-model-thinking) | Auto-set and remember thinking levels per model |
 | [pi-session-recall](packages/pi-session-recall) | Search and query past sessions — "remember when we tried X?" |
 | [pi-sketch](packages/pi-sketch) | Visual sketching in the terminal |
 | [pi-spar](packages/pi-spar) | Agent-to-agent sparring — back-and-forth conversations with peer AI models for code review, debugging, and design |
