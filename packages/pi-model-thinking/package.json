@@ -1,0 +1,45 @@
+{
+  "name": "@ogulcancelik/pi-model-thinking",
+  "version": "0.1.0",
+  "description": "Auto-set thinking levels per model/provider in pi",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "thinking",
+    "reasoning",
+    "thinking-level",
+    "model-switching",
+    "model-specific",
+    "provider",
+    "auto-config",
+    "coding-agent"
+  ],
+  "author": "Can Celik",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogulcancelik/pi-extensions.git",
+    "directory": "packages/pi-model-thinking"
+  },
+  "bugs": {
+    "url": "https://github.com/ogulcancelik/pi-extensions/issues"
+  },
+  "homepage": "https://github.com/ogulcancelik/pi-extensions/tree/main/packages/pi-model-thinking#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "files": [
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ]
+}
