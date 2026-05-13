@@ -691,7 +691,7 @@ export class SparPeekOverlay {
 		const followIcon = this.followMode ? th.fg("success", "●") : th.fg("dim", "○");
 
 		lines.push(th.fg("border", "├" + "─".repeat(innerW) + "┤"));
-		const footer = ` ${scrollInfo} ${followIcon} │ j/k scroll │ g/G top/end │ q close `;
+		const footer = ` ${scrollInfo} ${followIcon} │ j/k scroll │ ctrl+u/d half-page │ g/G top/end │ q close `;
 		const footerPad = " ".repeat(Math.max(0, innerW - visibleWidth(footer)));
 		lines.push(th.fg("border", "│") + th.fg("dim", footer) + footerPad + th.fg("border", "│"));
 		lines.push(th.fg("border", "╰" + "─".repeat(innerW) + "╯"));

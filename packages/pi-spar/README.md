@@ -53,7 +53,8 @@ Sessions persist — follow up, push back, disagree. The peer can read files, gr
 
 ![peek overlay demo](./assets/peek-demo.jpg)
 
-- **j/k** or **↑/↓** — scroll
+- **j/k** or **↑/↓** — scroll by line
+- **ctrl+u/ctrl+d** — scroll half-page
 - **g/G** — jump to top/bottom
 - **q** or **Esc** — close
 
