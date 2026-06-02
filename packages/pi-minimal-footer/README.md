@@ -21,7 +21,7 @@ Minimal footer for [pi](https://github.com/earendil-works/pi) that replaces the 
 | OpenAI Codex   | Primary + secondary rolling windows                    |
 | GitHub Copilot | Premium interactions + chat quotas                     |
 | Google Gemini  | Pro + Flash remaining quotas                           |
-| MiniMax        | 5h + weekly rolling windows (Token Plan / Coding Plan) |
+| MiniMax        | 5h + weekly rolling windows (Token Plan, credit-based)  |
 | MiniMax CN     | Same as MiniMax, China endpoint                        |
 | Kimi Coding    | 5h + weekly rolling windows (Plan)                     |
 

@@ -4,7 +4,7 @@
  * Custom footer with context gauge + subscription usage bars.
  * Auto-detects provider from current model and shows relevant usage.
  *
- * Supports: Claude Max, Codex, Copilot, Gemini
+ * Supports: Claude Max, Codex, Copilot, Gemini, MiniMax Token Plan, Kimi Coding
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -544,10 +544,12 @@ async function fetchGeminiUsage(): Promise<UsageSnapshot> {
 async function fetchMinimaxUsage(provider: "minimax" | "minimax-cn"): Promise<UsageSnapshot> {
   const token = getMinimaxToken(provider);
   const providerLabel = provider === "minimax-cn" ? "MiniMax CN" : "MiniMax";
+  // Docs-recommended Token Plan endpoint. The legacy /coding_plan/remains path
+  // still works but the response field names differ from the current UI.
   const endpoint =
     provider === "minimax-cn"
-      ? "https://api.minimaxi.com/v1/api/openplatform/coding_plan/remains"
-      : "https://api.minimax.io/v1/api/openplatform/coding_plan/remains";
+      ? "https://api.minimaxi.com/v1/token_plan/remains"
+      : "https://api.minimax.io/v1/token_plan/remains";
 
   if (!token) {
     return { provider: providerLabel, windows: [], error: "no-auth", fetchedAt: Date.now() };
@@ -578,9 +580,16 @@ async function fetchMinimaxUsage(provider: "minimax" | "minimax-cn"): Promise<Us
     }
 
     const remains = Array.isArray(data?.model_remains) ? data.model_remains : [];
+    // Token Plan returns one bucket per capability (general = text/code, video, etc.).
+    // Prefer the active "general" bucket since M-series chat models land there.
+    // status === 1 = window is active/limiting, 3 = inactive (no usage). Fall back
+    // to the first active bucket, then the first bucket of any kind.
     const textBucket =
-      remains.find((entry: any) => typeof entry?.model_name === "string" && /^minimax-m/i.test(entry.model_name)) ||
-      remains.find((entry: any) => typeof entry?.model_name === "string" && /minimax/i.test(entry.model_name)) ||
+      remains.find(
+        (entry: any) => entry?.model_name === "general" && Number(entry?.current_interval_status) === 1
+      ) ||
+      remains.find((entry: any) => entry?.model_name === "general") ||
+      remains.find((entry: any) => Number(entry?.current_interval_status) === 1) ||
       remains[0];
 
     if (!textBucket) {
@@ -589,12 +598,12 @@ async function fetchMinimaxUsage(provider: "minimax" | "minimax-cn"): Promise<Us
 
     const windows: RateWindow[] = [];
 
-    const intervalTotal = Number(textBucket.current_interval_total_count) || 0;
-    const intervalRemaining = Number(textBucket.current_interval_usage_count) || 0;
-    if (intervalTotal > 0) {
-      // current_*_usage_count = remaining (confirmed against MiniMax website UI)
-      const used = intervalTotal - intervalRemaining;
-      const usedPercent = clampPercent((used / intervalTotal) * 100);
+    // Source of truth: *_remaining_percent (the *_total_count / *_usage_count
+    // fields are zeroed in the credit-based model and cannot be used to compute
+    // a fraction). The UI usage bar maps 100 - remainingPercent -> used.
+    const intervalRemaining = Number(textBucket.current_interval_remaining_percent);
+    if (Number.isFinite(intervalRemaining)) {
+      const usedPercent = clampPercent(100 - intervalRemaining);
       const resetDate = textBucket.end_time ? new Date(Number(textBucket.end_time)) : undefined;
       const durationMs =
         textBucket.start_time && textBucket.end_time
@@ -607,13 +616,12 @@ async function fetchMinimaxUsage(provider: "minimax" | "minimax-cn"): Promise<Us
       });
     }
 
-    const weeklyTotal = Number(textBucket.current_weekly_total_count) || 0;
-    const weeklyRemaining = Number(textBucket.current_weekly_usage_count) || 0;
-    if (weeklyTotal > 0) {
-      // current_*_usage_count = remaining (confirmed against MiniMax website UI)
-      const used = weeklyTotal - weeklyRemaining;
-      const usedPercent = clampPercent((used / weeklyTotal) * 100);
-      const resetDate = textBucket.weekly_end_time ? new Date(Number(textBucket.weekly_end_time)) : undefined;
+    const weeklyRemaining = Number(textBucket.current_weekly_remaining_percent);
+    if (Number.isFinite(weeklyRemaining)) {
+      const usedPercent = clampPercent(100 - weeklyRemaining);
+      const resetDate = textBucket.weekly_end_time
+        ? new Date(Number(textBucket.weekly_end_time))
+        : undefined;
       const durationMs =
         textBucket.weekly_start_time && textBucket.weekly_end_time
           ? Number(textBucket.weekly_end_time) - Number(textBucket.weekly_start_time)
@@ -623,6 +631,10 @@ async function fetchMinimaxUsage(provider: "minimax" | "minimax-cn"): Promise<Us
         usedPercent,
         resetsIn: resetDate ? formatResetTime(resetDate) : undefined,
       });
+    }
+
+    if (windows.length === 0) {
+      return { provider: providerLabel, windows: [], error: "no-usage-data", fetchedAt: Date.now() };
     }
 
     return { provider: providerLabel, windows, fetchedAt: Date.now() };
