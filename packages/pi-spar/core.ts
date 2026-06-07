@@ -30,7 +30,7 @@ const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"] as 
 export type SparThinkingLevel = (typeof THINKING_LEVELS)[number];
 
 // Default tools for peer agent (read-only)
-const DEFAULT_TOOLS = "read,grep,find,ls";
+export const DEFAULT_TOOLS = "read,grep,find,ls";
 
 // =============================================================================
 // Spar Config — user-configured models via /spar-models
@@ -41,6 +41,8 @@ export interface SparModelConfig {
 	provider: string;           // pi provider like "openai", "anthropic"
 	id: string;                 // model id like "gpt-5.4", "claude-opus-4-6"
 	thinking?: SparThinkingLevel; // optional per-model thinking level
+	tools?: string;             // optional pi tool list for new sessions; defaults to read-only
+	skills?: string[];           // optional skill names/paths for new sessions
 	when?: string;              // optional guidance: when to use this model
 }
 
@@ -63,11 +65,17 @@ function normalizeSparConfig(value: unknown): SparConfig {
 		const raw = model as Record<string, unknown>;
 		if (typeof raw.alias !== "string" || typeof raw.provider !== "string" || typeof raw.id !== "string") continue;
 
+		const skills = Array.isArray(raw.skills)
+			? raw.skills.filter((skill): skill is string => typeof skill === "string" && skill.trim().length > 0)
+			: undefined;
+
 		models.push({
 			alias: raw.alias,
 			provider: raw.provider,
 			id: raw.id,
 			...(isThinkingLevel(raw.thinking) ? { thinking: raw.thinking } : {}),
+			...(typeof raw.tools === "string" && raw.tools.trim() ? { tools: raw.tools.trim() } : {}),
+			...(skills && skills.length > 0 ? { skills } : {}),
 			...(typeof raw.when === "string" ? { when: raw.when } : {}),
 		});
 	}
@@ -109,6 +117,8 @@ export function getConfiguredModelsDescription(): string {
 		.map(m => {
 			let line = `- \`${m.alias}\` — ${m.provider}/${m.id}`;
 			if (m.thinking) line += ` — thinking: ${m.thinking}`;
+			if (m.tools) line += ` — tools: ${m.tools}`;
+			if (m.skills?.length) line += ` — skills: ${m.skills.join(",")}`;
 			if (m.when) line += ` — ${m.when}`;
 			return line;
 		})
@@ -126,6 +136,8 @@ export interface SessionInfo {
 	modelId: string;
 	thinking?: string;
 	tools: string;
+	skills?: string[];
+	skillPaths?: string[];
 	sessionFile: string;
 	createdAt: number;
 	lastActivity?: number;
@@ -529,7 +541,7 @@ function countSessionMessages(sessionFile: string): number {
  * Resolve model alias or provider:model string to components.
  * Accepts: "opus", "gpt5" (configured aliases), or "provider:model" directly.
  */
-export function resolveModel(model: string): { provider: string; modelId: string; fullModel: string; thinking?: SparThinkingLevel } {
+export function resolveModel(model: string): { provider: string; modelId: string; fullModel: string; thinking?: SparThinkingLevel; tools?: string; skills?: string[] } {
 	const config = loadSparConfig();
 	const aliases = getModelAliases();
 	const fullModel = aliases[model] || model;
@@ -547,6 +559,8 @@ export function resolveModel(model: string): { provider: string; modelId: string
 		modelId: parts.slice(1).join(":"),
 		fullModel,
 		thinking: configuredModel?.thinking,
+		tools: configuredModel?.tools,
+		skills: configuredModel?.skills,
 	};
 }
 
@@ -683,17 +697,113 @@ function extractTextFromContent(content: any): string {
 	return "";
 }
 
+function normalizeTools(tools: string | undefined): string {
+	return (tools ?? DEFAULT_TOOLS)
+		.split(",")
+		.map(tool => tool.trim())
+		.filter(Boolean)
+		.join(",");
+}
+
+function normalizeSkills(skills: string[] | undefined): string[] | undefined {
+	const normalized = (skills ?? []).map(skill => skill.trim()).filter(Boolean);
+	return normalized.length > 0 ? Array.from(new Set(normalized)) : undefined;
+}
+
+function findNearestSkillDirs(cwd: string): string[] {
+	const dirs: string[] = [];
+	let current = cwd;
+	while (true) {
+		dirs.push(path.join(current, ".pi", "skills"));
+		dirs.push(path.join(current, ".agents", "skills"));
+		const parent = path.dirname(current);
+		if (parent === current) break;
+		current = parent;
+	}
+	return dirs;
+}
+
+function parseSkillName(content: string): string | undefined {
+	const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
+	const frontmatter = match?.[1] ?? content.slice(0, 2048);
+	const nameMatch = frontmatter.match(/^name:\s*["']?([^"'\n]+)["']?\s*$/m);
+	return nameMatch?.[1]?.trim();
+}
+
+function resolveSkillPath(skill: string, cwd: string): string {
+	const expanded = skill.startsWith("~/") ? path.join(os.homedir(), skill.slice(2)) : skill;
+	if (path.isAbsolute(expanded) || expanded.startsWith(".")) {
+		const candidate = path.resolve(cwd, expanded);
+		if (fs.existsSync(candidate)) return candidate;
+		throw new Error(`Skill path not found: ${skill}`);
+	}
+
+	const roots = [
+		path.join(os.homedir(), ".pi", "agent", "skills"),
+		path.join(os.homedir(), ".agents", "skills"),
+		...findNearestSkillDirs(cwd),
+		path.join(os.homedir(), ".pi", "agent", "npm", "node_modules"),
+	];
+
+	for (const root of roots) {
+		const directDir = path.join(root, skill);
+		const directSkill = path.join(directDir, "SKILL.md");
+		if (fs.existsSync(directSkill)) return directDir;
+		const directMd = path.join(root, `${skill}.md`);
+		if (fs.existsSync(directMd)) return directMd;
+	}
+
+	const npmRoot = path.join(os.homedir(), ".pi", "agent", "npm", "node_modules");
+	const stack = fs.existsSync(npmRoot) ? [npmRoot] : [];
+	while (stack.length > 0) {
+		const dir = stack.pop()!;
+		let entries: fs.Dirent[];
+		try {
+			entries = fs.readdirSync(dir, { withFileTypes: true });
+		} catch {
+			continue;
+		}
+		const skillFile = path.join(dir, "SKILL.md");
+		if (fs.existsSync(skillFile)) {
+			try {
+				if (parseSkillName(fs.readFileSync(skillFile, "utf-8")) === skill) return dir;
+			} catch {}
+		}
+		for (const entry of entries) {
+			if (!entry.isDirectory()) continue;
+			if (entry.name === "node_modules" && dir !== npmRoot) continue;
+			stack.push(path.join(dir, entry.name));
+		}
+	}
+
+	throw new Error(`Skill not found: ${skill}`);
+}
+
+function resolveSkillPaths(skills: string[] | undefined, cwd: string): string[] | undefined {
+	const normalized = normalizeSkills(skills);
+	if (!normalized) return undefined;
+	return normalized.map(skill => resolveSkillPath(skill, cwd));
+}
+
 /**
  * Create a new session
  */
-export function createSession(name: string, model: string, thinking?: string): SessionInfo {
+export function createSession(name: string, model: string, thinking?: string, tools?: string, skills?: string[], cwd: string = process.cwd()): SessionInfo {
 	validateSessionName(name);
 	
 	if (sessionExists(name)) {
 		throw new Error(`Session "${name}" already exists.`);
 	}
 
-	const { provider, modelId, fullModel, thinking: configuredThinking } = resolveModel(model);
+	const {
+		provider,
+		modelId,
+		fullModel,
+		thinking: configuredThinking,
+		tools: configuredTools,
+		skills: configuredSkills,
+	} = resolveModel(model);
+	const effectiveSkills = normalizeSkills(skills ?? configuredSkills);
 	
 	const info: SessionInfo = {
 		id: name,
@@ -701,7 +811,9 @@ export function createSession(name: string, model: string, thinking?: string): S
 		provider,
 		modelId,
 		thinking: thinking ?? configuredThinking ?? DEFAULT_THINKING,
-		tools: DEFAULT_TOOLS,
+		tools: normalizeTools(tools ?? configuredTools),
+		skills: effectiveSkills,
+		skillPaths: resolveSkillPaths(effectiveSkills, cwd),
 		sessionFile: getSessionFilePath(name),
 		createdAt: Date.now(),
 		messageCount: 0,
@@ -721,6 +833,9 @@ export async function sendMessage(
 	options: {
 		model?: string;
 		thinking?: string;
+		tools?: string;
+		skills?: string[];
+		cwd?: string;
 		timeout?: number;
 		signal?: AbortSignal;
 		onProgress?: (status: ProgressStatus) => void;
@@ -735,7 +850,7 @@ export async function sendMessage(
 		if (!options.model) {
 			throw new Error(`Session "${sessionName}" doesn't exist. Provide a model to create it.`);
 		}
-		info = createSession(sessionName, options.model, options.thinking);
+		info = createSession(sessionName, options.model, options.thinking, options.tools, options.skills, options.cwd);
 	} else if (options.model) {
 		const requestedModel = resolveModel(options.model);
 		if (requestedModel.fullModel !== info.model) {
@@ -747,6 +862,29 @@ export async function sendMessage(
 				`Use a different session name or omit model to continue the existing session.`
 			);
 		}
+	}
+
+	if (info) {
+		if (options.tools && normalizeTools(options.tools) !== normalizeTools(info.tools)) {
+			throw new Error(
+				`Session "${sessionName}" already exists with tools "${info.tools}". ` +
+				`Use a new session name to change tools.`
+			);
+		}
+		if (options.skills) {
+			const requestedSkills = normalizeSkills(options.skills) ?? [];
+			const existingSkills = normalizeSkills(info.skills) ?? [];
+			if (JSON.stringify(requestedSkills) !== JSON.stringify(existingSkills)) {
+				throw new Error(
+					`Session "${sessionName}" already exists with skills "${existingSkills.join(",") || "none"}". ` +
+					`Use a new session name to change skills.`
+				);
+			}
+		}
+	}
+
+	if (info.skills?.length && !info.skillPaths?.length) {
+		info.skillPaths = resolveSkillPaths(info.skills, options.cwd ?? process.cwd());
 	}
 
 	const timeout = options.timeout ?? DEFAULT_TIMEOUT;
@@ -822,6 +960,10 @@ async function sendToAgent(
 
 	if (info.tools) {
 		args.push("--tools", info.tools);
+	}
+
+	for (const skillPath of info.skillPaths ?? []) {
+		args.push("--skill", skillPath);
 	}
 
 	logger.info("spawn", "Spawning pi process", { bin: piBin, args });

@@ -18,6 +18,7 @@ import {
 	deleteSession,
 	DEFAULT_TIMEOUT,
 	DEFAULT_THINKING,
+	DEFAULT_TOOLS,
 } from "./core.js";
 import {
 	SparPeekOverlay,
@@ -46,7 +47,9 @@ Do not use this for routine review, simple confirmation, or because a second opi
 
 When you do use it, prefer a different model family when possible.
 
-**Peer limitations:** read files, grep, find, and ls only. No bash, web, network, or file writes.
+**Default peer capabilities:** tools are \`${DEFAULT_TOOLS}\` unless you explicitly choose tools when creating a session. Bash, edit, and write are optional and must be requested deliberately.
+
+**Skills:** optional skills can be attached when creating a session. Skills are instructions, not tools. If a skill needs shell commands, include \`bash\` in tools.
 
 **Important:**
 - if they raise a point you hadn't considered, dig into it. If you disagree, counter it. Don't take the first response and run.
@@ -61,7 +64,9 @@ ${getConfiguredModelsDescription()}
 **Actions:**
 - \`send\` - Send a message to a spar session (creates session if needed)
 - \`list\` - List existing spar sessions
-- \`history\` - View past exchanges from a session (default: last 5)`;
+- \`history\` - View past exchanges from a session (default: last 5)
+
+For existing sessions, model, tools, and skills are fixed. Use a new session name to change capabilities.`;
 		},
 
 		parameters: Type.Object({
@@ -80,6 +85,12 @@ ${getConfiguredModelsDescription()}
 			thinking: Type.Optional(StringEnum(["off", "minimal", "low", "medium", "high", "xhigh"] as const, {
 				description: `Thinking level. Explicit value overrides model config; default is ${DEFAULT_THINKING}.`,
 			})),
+			tools: Type.Optional(Type.String({
+				description: `Comma-separated tools for a new session. Default: ${DEFAULT_TOOLS}. Add bash/edit/write only when needed. Fixed after session creation.`,
+			})),
+			skills: Type.Optional(Type.Array(Type.String(), {
+				description: "Skill names or paths for a new session. Skills are instructions; include bash in tools for command-backed skills.",
+			})),
 			timeout: Type.Optional(Type.Number({
 				description: `Timeout in ms (default: ${DEFAULT_TIMEOUT / 60000} min). Resets on activity.`,
 			})),
@@ -89,12 +100,14 @@ ${getConfiguredModelsDescription()}
 		}),
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
-			const { action, session, message, model, thinking, timeout, count } = params as {
+			const { action, session, message, model, thinking, tools, skills, timeout, count } = params as {
 				action: "send" | "list" | "history";
 				session?: string;
 				message?: string;
 				model?: string;
 				thinking?: string;
+				tools?: string;
+				skills?: string[];
 				timeout?: number;
 				count?: number;
 			};
@@ -213,6 +226,9 @@ ${getConfiguredModelsDescription()}
 					const result = await sendMessage(session, message, {
 						model,
 						thinking,
+						tools,
+						skills,
+						cwd: ctx.cwd,
 						timeout: timeout ?? DEFAULT_TIMEOUT,
 						signal,
 						onProgress: (progress) => {

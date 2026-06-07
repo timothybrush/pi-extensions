@@ -16,16 +16,17 @@ Configure which models are available for sparring by editing `~/.pi/agent/spar/c
 {
   "models": [
     { "alias": "opus", "provider": "anthropic", "id": "claude-opus-4.7", "thinking": "xhigh", "when": "best for deep reasoning" },
-    { "alias": "minimax", "provider": "minimax", "id": "minimax-m2.7", "thinking": "low", "when": "great ui/ux eye, weaker on code" }
+    { "alias": "minimax", "provider": "minimax", "id": "minimax-m2.7", "thinking": "low", "when": "great ui/ux eye, weaker on code" },
+    { "alias": "researcher", "provider": "openai", "id": "gpt-5.5", "tools": "read,grep,find,ls,bash", "skills": ["pi-web-browse"], "when": "can browse through the web-browse skill" }
   ]
 }
 ```
 
-Each entry needs `alias`, `provider`, and `id`. The optional `thinking` field sets the model's default thinking level for new spar sessions. If omitted, spar uses `high`. A tool call can still pass an explicit `thinking` value to override the config. The optional `when` field is shown in the tool description to help the agent pick the right model for the task.
+Each entry needs `alias`, `provider`, and `id`. The optional `thinking` field sets the model's default thinking level for new spar sessions. If omitted, spar uses `high`. A tool call can still pass an explicit `thinking` value to override the config. The optional `tools` field sets the peer's tool list for new sessions; default is `read,grep,find,ls`. The optional `skills` field attaches skill names or paths to new sessions. The optional `when` field is shown in the tool description to help the agent pick the right model for the task.
 
-Valid thinking values are `off`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+Valid thinking values are `off`, `minimal`, `low`, `medium`, `high`, and `xhigh`. Skills are instructions, not tools; include `bash` in `tools` when a skill needs shell commands.
 
-> **Note:** Changes are picked up on the next `spar` tool call — no restart needed. The `thinking` and `when` text are included in the live tool description the agent sees.
+> **Note:** Changes are picked up on the next `spar` tool call — no restart needed. The configured thinking, tools, skills, and `when` text are included in the live tool description the agent sees.
 
 ## Usage
 
@@ -40,7 +41,7 @@ The agent uses this when you ask it to consult another model:
 "ask opus to review the error handling in src/auth.ts"
 ```
 
-Sessions persist — follow up, push back, disagree. The peer can read files, grep, and explore your codebase but can't execute commands or write files.
+Sessions persist — follow up, push back, disagree. The peer uses read-only tools by default, and the agent can explicitly choose broader tools or skills when creating a session. Existing sessions keep their original model, tools, and skills.
 
 ### Commands
 
