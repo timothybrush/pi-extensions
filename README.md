@@ -4,6 +4,7 @@ Extensions for [pi](https://github.com/earendil-works/pi), the terminal-based co
 
 | Package | Description |
 |---------|-------------|
+| [pi-codex-subagents](packages/pi-codex-subagents) | Codex-shaped, session-scoped subagents with templates, waits, steering, and a live overlay |
 | [pi-ghost](packages/pi-ghost) | Ephemeral side conversation overlay — open a temporary ghost session inside the current pi UI |
 | [pi-ghostty-theme-sync](packages/pi-ghostty-theme-sync) | Sync pi theme with Ghostty terminal colors |
 | [pi-quit-and-delete](packages/pi-quit-and-delete) | Keyboard shortcut to quit pi and permanently delete the active session file |
@@ -16,7 +17,6 @@ Extensions for [pi](https://github.com/earendil-works/pi), the terminal-based co
 | [pi-model-thinking](packages/pi-model-thinking) | Auto-set and remember thinking levels per model |
 | [pi-session-recall](packages/pi-session-recall) | Search and query past sessions — "remember when we tried X?" |
 | [pi-sketch](packages/pi-sketch) | Visual sketching in the terminal |
-| [pi-spar](packages/pi-spar) | Agent-to-agent sparring — back-and-forth conversations with peer AI models for code review, debugging, and design |
 | [pi-ssh-tools](packages/pi-ssh-tools) | Toggle explicit SSH tools on demand via `/ssh` without replacing local tools |
 | [pi-tmux](packages/pi-tmux) | Tmux pane management — run dev servers and long-running processes in named panes |
 | [pi-web-browse](packages/pi-web-browse) | Browse the web via a headless browser (CDP) |

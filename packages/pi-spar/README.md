@@ -1,5 +1,12 @@
 # pi-spar
 
+> [!WARNING]
+> **Deprecated.** Use [pi-codex-subagents](https://github.com/ogulcancelik/pi-extensions/tree/main/packages/pi-codex-subagents) instead. It provides session-scoped subagents, reusable agent templates, parallel waits, steering, and a live overlay.
+>
+> ```bash
+> pi install npm:@ogulcancelik/pi-codex-subagents
+> ```
+
 Agent-to-agent sparring for [pi](https://github.com/earendil-works/pi). Back-and-forth conversations with peer AI models for debugging, design review, and challenging your thinking.
 
 ## Install
