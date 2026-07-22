@@ -62,6 +62,23 @@ describe("compact review evidence", () => {
     expect(envelope.match(/git commit -m squash/g)).toHaveLength(1);
   });
 
+  test("treats compaction summaries as non-authoritative assistant evidence", () => {
+    const records = collectReviewEvidence([
+      {
+        id: "compact-1",
+        type: "compaction",
+        summary: "The earlier user requested a push.",
+      },
+    ]);
+
+    expect(records).toEqual([{
+      key: "compact-1:0:compaction",
+      source: "assistant",
+      text: "COMPACTION SUMMARY: The earlier user requested a push.",
+    }]);
+    expect(AUTO_PERMISSIONS_SYSTEM_PROMPT).toContain("including compaction summaries");
+  });
+
   test("builds explicit cumulative full and delta envelopes around the exact latest action", () => {
     const request = {
       tool: "functions.bash",

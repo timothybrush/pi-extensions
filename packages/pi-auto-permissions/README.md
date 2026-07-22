@@ -139,7 +139,7 @@ The guardian must return one of three decisions:
 
 ## Conversation context and caching
 
-The guardian receives a compact chronological view of the active conversation branch plus the exact pending command. It includes user and assistant text and small summaries of finalized tool calls, but excludes thinking, tool output bodies, file contents, patches, images, and session metadata.
+The guardian receives a compact chronological view of Pi's active, compaction-aware conversation context plus the exact pending command. It includes retained user and assistant text, Pi's latest compaction summary, and small summaries of finalized tool calls, but excludes summarized-away history, thinking, tool output bodies, file contents, patches, images, and session metadata. Compaction summaries are non-authoritative assistant context and cannot grant permission.
 
 The first review sends the complete compact evidence. Later reviews reuse the same reviewer session and append only newly finalized evidence and the latest action. The extension uses stable session identity, cache affinity, and long cache retention when supported by the provider. Branch changes, model or policy changes, failures, cancellation, and context pressure reset the reviewer session.
 

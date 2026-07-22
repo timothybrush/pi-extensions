@@ -88,6 +88,7 @@ function harness(branchInput: any[], mode = "print") {
   let branchEntries = branchInput.map((entry, index) => typeof entry === "string"
     ? { id: `user-${index}`, type: "message", message: { role: "user", content: entry } }
     : entry);
+  let contextEntries = branchEntries;
   const pi = {
     events: { emit() {} },
     on(name: string, handler: any) {
@@ -122,6 +123,7 @@ function harness(branchInput: any[], mode = "print") {
     sessionManager: {
       getSessionId: () => sessionId,
       getBranch: () => branchEntries,
+      buildContextEntries: () => contextEntries,
     },
     cwd: "/repo",
     mode,
@@ -145,7 +147,11 @@ function harness(branchInput: any[], mode = "print") {
     overrideTool,
     get bashTool() { return bashTool; },
     setBashSource(sourceInfo: { path: string; source: string }) { bashSourceInfo = sourceInfo; },
-    setBranch(entries: any[]) { branchEntries = entries; },
+    setBranch(entries: any[]) {
+      branchEntries = entries;
+      contextEntries = entries;
+    },
+    setContextEntries(entries: any[]) { contextEntries = entries; },
     setSessionId(value: string) { sessionId = value; },
     setProjectTrusted(value: boolean) { projectTrusted = value; },
     ctx,
@@ -231,6 +237,36 @@ describe("auto permissions tool gate", () => {
     const { toolCallHandler, ctx } = harness(["push this branch"]);
     const result = await toolCallHandler({ toolName: "functions.bash", input: { command: "git push origin feature" } }, ctx);
     expect(result).toBeUndefined();
+  });
+
+  test("reviews compaction-aware context instead of summarized branch history", async () => {
+    const calls: Array<{ context: any }> = [];
+    completeOverride = async (context) => {
+      calls.push({ context });
+      return reviewerResponse();
+    };
+    const compaction = {
+      id: "compact-1",
+      type: "compaction",
+      summary: "Earlier work was summarized without granting push permission.",
+    };
+    const recent = { id: "u2", type: "message", message: { role: "user", content: "push this branch" } };
+    const state = harness([
+      { id: "u1", type: "message", message: { role: "user", content: "OLD_SUMMARIZED_HISTORY_CANARY" } },
+      compaction,
+      recent,
+    ]);
+    state.setContextEntries([compaction, recent]);
+
+    expect(await state.toolCallHandler(
+      { toolName: "bash", input: { command: "git push origin feature" } },
+      state.ctx,
+    )).toBeUndefined();
+
+    const envelope = calls[0].context.messages[0].content[0].text;
+    expect(envelope).toContain("COMPACTION SUMMARY: Earlier work was summarized");
+    expect(envelope).toContain("USER: push this branch");
+    expect(envelope).not.toContain("OLD_SUMMARIZED_HISTORY_CANARY");
   });
 
   test("reuses one append-only reviewer context with stable cache options", async () => {

@@ -266,7 +266,7 @@ export default function autoPermissionsExtension(pi: ExtensionAPI) {
     }
     const systemPrompt = buildReviewerSystemPrompt(config.systemPrompt, projectInstructions);
     const fingerprint = reviewerFingerprint(mainSessionId, model, config, systemPrompt, projectTrusted);
-    const evidence = collectReviewEvidence(ctx.sessionManager.getBranch(), toolCallId);
+    const evidence = collectReviewEvidence(ctx.sessionManager.buildContextEntries(), toolCallId);
     const evidenceKeys = evidence.map((record) => record.key);
     const budget = reviewContextBudget(model.contextWindow);
     let base = reviewerLineage;
