@@ -79,6 +79,59 @@ describe("compact review evidence", () => {
     expect(AUTO_PERMISSIONS_SYSTEM_PROMPT).toContain("including compaction summaries");
   });
 
+  test("uses retained user evidence after a Codex native compaction checkpoint", () => {
+    const records = collectReviewEvidence([
+      { id: "old", type: "message", message: { role: "user", content: "OLD_HISTORY_CANARY" } },
+      {
+        id: "native-1",
+        type: "custom",
+        customType: "openai-codex-native-compaction",
+        data: {
+          kind: "openai-codex-native-compaction",
+          version: 1,
+          modelKey: "openai-codex:openai-codex-responses:gpt-5.6-sol",
+          replacementHistory: [
+            { role: "user", content: [{ type: "input_text", text: "push this branch" }] },
+            { type: "compaction", encrypted_content: "OPAQUE_COMPACTION_CANARY" },
+          ],
+        },
+      },
+      { id: "recent", type: "message", message: { role: "user", content: "use origin master" } },
+    ]);
+
+    expect(records.map((record) => record.text)).toEqual([
+      "USER: push this branch",
+      "CODEX NATIVE COMPACTION: Older opaque conversation history was omitted.",
+      "USER: use origin master",
+    ]);
+    expect(JSON.stringify(records)).not.toContain("OLD_HISTORY_CANARY");
+    expect(JSON.stringify(records)).not.toContain("OPAQUE_COMPACTION_CANARY");
+  });
+
+  test("uses retained user evidence from native Pi compaction entries", () => {
+    const records = collectReviewEvidence([
+      {
+        id: "native-compact-1",
+        type: "compaction",
+        summary: "OpenAI Codex native compaction checkpoint.",
+        details: {
+          kind: "openai-codex-native-compaction",
+          version: 1,
+          modelKey: "openai-codex:openai-codex-responses:gpt-5.6-sol",
+          replacementHistory: [
+            { type: "message", role: "user", content: "commit these changes" },
+            { type: "compaction", encrypted_content: "opaque" },
+          ],
+        },
+      },
+    ]);
+
+    expect(records.map((record) => record.text)).toEqual([
+      "USER: commit these changes",
+      "CODEX NATIVE COMPACTION: Older opaque conversation history was omitted.",
+    ]);
+  });
+
   test("builds explicit cumulative full and delta envelopes around the exact latest action", () => {
     const request = {
       tool: "functions.bash",

@@ -269,6 +269,43 @@ describe("auto permissions tool gate", () => {
     expect(envelope).not.toContain("OLD_SUMMARIZED_HISTORY_CANARY");
   });
 
+  test("bounds review evidence at a Codex native compaction checkpoint", async () => {
+    const calls: Array<{ context: any }> = [];
+    completeOverride = async (context) => {
+      calls.push({ context });
+      return reviewerResponse();
+    };
+    const state = harness([
+      { id: "old", type: "message", message: { role: "assistant", content: [{ type: "text", text: `OLD_HISTORY_CANARY${"x".repeat(300_000)}` }] } },
+      {
+        id: "native-1",
+        type: "custom",
+        customType: "openai-codex-native-compaction",
+        data: {
+          kind: "openai-codex-native-compaction",
+          version: 1,
+          modelKey: "openai-codex:openai-codex-responses:gpt-5.6-sol",
+          replacementHistory: [
+            { role: "user", content: [{ type: "input_text", text: "push this branch" }] },
+            { type: "compaction", encrypted_content: "OPAQUE_COMPACTION_CANARY" },
+          ],
+        },
+      },
+    ]);
+    state.ctx.model.contextWindow = 30_000;
+
+    expect(await state.toolCallHandler(
+      { toolName: "bash", input: { command: "git push origin feature" } },
+      state.ctx,
+    )).toBeUndefined();
+
+    expect(calls).toHaveLength(1);
+    const envelope = calls[0].context.messages[0].content[0].text;
+    expect(envelope).toContain("USER: push this branch");
+    expect(envelope).not.toContain("OLD_HISTORY_CANARY");
+    expect(envelope).not.toContain("OPAQUE_COMPACTION_CANARY");
+  });
+
   test("reuses one append-only reviewer context with stable cache options", async () => {
     const calls: Array<{ context: any; options: any }> = [];
     const responses = [reviewerResponse(), reviewerResponse()];
@@ -572,13 +609,29 @@ describe("auto permissions tool gate", () => {
     expect(calls[1].context.messages).toHaveLength(1);
   });
 
-  test("fails closed when one full non-ASCII compact review cannot fit", async () => {
+  test("estimates review tokens instead of treating UTF-8 bytes as tokens", async () => {
     let calls = 0;
     completeOverride = async () => {
       calls++;
       return reviewerResponse();
     };
     const state = harness([`push this branch ${"😀".repeat(6000)}`]);
+    state.ctx.model.contextWindow = 30_000;
+
+    expect(await state.toolCallHandler(
+      { toolName: "bash", input: { command: "git push origin feature" } },
+      state.ctx,
+    )).toBeUndefined();
+    expect(calls).toBe(1);
+  });
+
+  test("fails closed when one full compact review cannot fit", async () => {
+    let calls = 0;
+    completeOverride = async () => {
+      calls++;
+      return reviewerResponse();
+    };
+    const state = harness([`push this branch ${"😀".repeat(60_000)}`]);
     state.ctx.model.contextWindow = 30_000;
 
     const result = await state.toolCallHandler({ toolName: "bash", input: { command: "git push origin feature" } }, state.ctx);

@@ -53,6 +53,13 @@ Return strict JSON only with this shape:
 {"decision":"approve"|"revise"|"ask_user","reason":"one concise sentence"}`;
 
 const GENERIC_ARGUMENT_KEYS = ["command", "path", "action", "query", "target", "url", "method", "cwd"] as const;
+const NATIVE_COMPACTION_KIND = "openai-codex-native-compaction";
+const NATIVE_COMPACTION_VERSION = 1;
+
+type NativeCompactionWindow = {
+  entryIndex: number;
+  records: ReviewEvidenceRecord[];
+};
 
 function evidenceKey(entryId: string, blockIndex: number, suffix: string): string {
   return `${entryId}:${blockIndex}:${suffix}`;
@@ -107,12 +114,93 @@ function messageBlocks(content: unknown): unknown[] {
   return Array.isArray(content) ? content : [content];
 }
 
+function nativeUserText(item: unknown): string | undefined {
+  if (!item || typeof item !== "object") return undefined;
+  const candidate = item as { type?: string; role?: string; content?: unknown };
+  if ((candidate.type !== undefined && candidate.type !== "message") || candidate.role !== "user") return undefined;
+  if (typeof candidate.content === "string") return candidate.content.trim() ? candidate.content : undefined;
+  if (!Array.isArray(candidate.content)) return undefined;
+  const text = candidate.content
+    .flatMap((part) => {
+      if (!part || typeof part !== "object") return [];
+      const block = part as { type?: string; text?: string };
+      return block.type === "input_text" && typeof block.text === "string" ? [block.text] : [];
+    })
+    .join("\n");
+  return text.trim() ? text : undefined;
+}
+
+function latestNativeCompactionWindow(entries: readonly unknown[]): NativeCompactionWindow | undefined {
+  for (let entryIndex = entries.length - 1; entryIndex >= 0; entryIndex--) {
+    const entry = entries[entryIndex];
+    if (!entry || typeof entry !== "object") continue;
+    const candidate = entry as {
+      type?: string;
+      id?: string;
+      customType?: string;
+      data?: unknown;
+      details?: unknown;
+    };
+    const raw = candidate.type === "custom" && candidate.customType === NATIVE_COMPACTION_KIND
+      ? candidate.data
+      : candidate.type === "compaction"
+        ? candidate.details
+        : undefined;
+    if (!raw || typeof raw !== "object") continue;
+    const details = raw as {
+      kind?: string;
+      version?: number;
+      modelKey?: string;
+      replacementHistory?: unknown;
+    };
+    if (details.kind !== NATIVE_COMPACTION_KIND) continue;
+    if (
+      details.version !== NATIVE_COMPACTION_VERSION
+      || typeof details.modelKey !== "string"
+      || !Array.isArray(details.replacementHistory)
+      || details.replacementHistory.length === 0
+    ) {
+      return undefined;
+    }
+    const compactionItem = details.replacementHistory.at(-1);
+    if (
+      !compactionItem
+      || typeof compactionItem !== "object"
+      || (compactionItem as { type?: string }).type !== "compaction"
+      || typeof (compactionItem as { encrypted_content?: unknown }).encrypted_content !== "string"
+    ) {
+      return undefined;
+    }
+
+    const entryId = typeof candidate.id === "string" ? candidate.id : `entry-${entryIndex}`;
+    const records: ReviewEvidenceRecord[] = [];
+    for (let itemIndex = 0; itemIndex < details.replacementHistory.length - 1; itemIndex++) {
+      const text = nativeUserText(details.replacementHistory[itemIndex]);
+      if (!text) return undefined;
+      records.push({
+        key: evidenceKey(entryId, itemIndex, "native-user"),
+        source: "user",
+        text: `USER: ${text}`,
+      });
+    }
+    records.push({
+      key: evidenceKey(entryId, details.replacementHistory.length - 1, "native-compaction"),
+      source: "assistant",
+      text: "CODEX NATIVE COMPACTION: Older opaque conversation history was omitted.",
+    });
+    return { entryIndex, records };
+  }
+  return undefined;
+}
+
 export function collectReviewEvidence(
   entries: readonly unknown[],
   pendingToolCallId?: string,
 ): ReviewEvidenceRecord[] {
+  const nativeWindow = latestNativeCompactionWindow(entries);
+  const activeEntries = nativeWindow ? entries.slice(nativeWindow.entryIndex + 1) : entries;
   const results = new Map<string, { isError: boolean }>();
-  for (const entry of entries) {
+  for (const entry of activeEntries) {
     if (!entry || typeof entry !== "object") continue;
     const message = (entry as { type?: string; message?: unknown }).message;
     if ((entry as { type?: string }).type !== "message" || !message || typeof message !== "object") continue;
@@ -122,9 +210,9 @@ export function collectReviewEvidence(
     }
   }
 
-  const records: ReviewEvidenceRecord[] = [];
-  for (let entryIndex = 0; entryIndex < entries.length; entryIndex++) {
-    const entry = entries[entryIndex];
+  const records: ReviewEvidenceRecord[] = nativeWindow ? [...nativeWindow.records] : [];
+  for (let entryIndex = 0; entryIndex < activeEntries.length; entryIndex++) {
+    const entry = activeEntries[entryIndex];
     if (!entry || typeof entry !== "object") continue;
     const candidate = entry as {
       type?: string;

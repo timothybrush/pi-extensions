@@ -141,6 +141,8 @@ The guardian must return one of three decisions:
 
 The guardian receives a compact chronological view of Pi's active, compaction-aware conversation context plus the exact pending command. It includes retained user and assistant text, Pi's latest compaction summary, and small summaries of finalized tool calls, but excludes summarized-away history, thinking, tool output bodies, file contents, patches, images, and session metadata. Compaction summaries are non-authoritative assistant context and cannot grant permission.
 
+The extension also recognizes native checkpoints created by [`@ogulcancelik/pi-codex-compaction`](https://github.com/ogulcancelik/pi-extensions/tree/main/packages/pi-codex-compaction). It keeps the checkpoint's retained plaintext user messages and post-checkpoint evidence, while excluding the opaque provider state and older local history. This integration is optional and does not change behavior when `pi-codex-compaction` is not installed.
+
 The first review sends the complete compact evidence. Later reviews reuse the same reviewer session and append only newly finalized evidence and the latest action. The extension uses stable session identity, cache affinity, and long cache retention when supported by the provider. Branch changes, model or policy changes, failures, cancellation, and context pressure reset the reviewer session.
 
 Assistant and tool evidence provide context but never grant permission. Later user messages override earlier conflicting user instructions.

@@ -46,7 +46,7 @@ function reviewContextBudget(contextWindow: number | undefined): number {
 
 function estimateReviewTokens(systemPrompt: string, messages: readonly Message[]): number {
   const serialized = `${systemPrompt}\n${JSON.stringify(messages)}`;
-  return new TextEncoder().encode(serialized).byteLength + 1024;
+  return Math.ceil(serialized.length / 4) + 1024;
 }
 
 function responsePromptTokens(usage: unknown): number {
